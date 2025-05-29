@@ -1,12 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
 import { Album } from './entities/album.entity';
+import { TracksService } from '../tracks/tracks.service';
 
 @Injectable()
 export class AlbumsService {
   private albums: Album[] = [];
+
+  constructor(
+    @Inject(forwardRef(() => TracksService))
+    private tracksService: TracksService,
+  ) {}
 
   findAll(): Album[] {
     return this.albums;
@@ -47,6 +58,8 @@ export class AlbumsService {
     if (albumIndex === -1) {
       throw new NotFoundException(`Album with id ${id} not found`);
     }
+
+    this.tracksService.updateAlbumToNull(id);
 
     this.albums.splice(albumIndex, 1);
   }
