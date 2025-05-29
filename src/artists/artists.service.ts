@@ -1,12 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
+import { AlbumsService } from '../albums/albums.service';
 
 @Injectable()
 export class ArtistsService {
   private artists: Artist[] = [];
+
+  constructor(
+    @Inject(forwardRef(() => AlbumsService))
+    private albumsService: AlbumsService,
+  ) {}
 
   findAll(): Artist[] {
     return this.artists;
@@ -32,7 +43,7 @@ export class ArtistsService {
   }
 
   update(id: string, updateArtistDto: UpdateArtistDto): Artist {
-    const artist = this.findOne(id); // Will throw NotFoundException if not found
+    const artist = this.findOne(id);
 
     artist.name = updateArtistDto.name;
     artist.grammy = updateArtistDto.grammy;
@@ -45,6 +56,8 @@ export class ArtistsService {
     if (artistIndex === -1) {
       throw new NotFoundException(`Artist with id ${id} not found`);
     }
+
+    this.albumsService.updateArtistToNull(id);
 
     this.artists.splice(artistIndex, 1);
   }
