@@ -1,0 +1,59 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: home-library-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: home_library
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_logs:/var/log/postgresql
+    networks:
+      - home-library-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d home_library"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJS Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: home-library-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@postgres:5432/home_library?schema=public
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./src:/usr/src/app/src  # For development hot reload
+    networks:
+      - home-library-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "npx prisma migrate deploy &&
+             npx prisma generate &&
+             npm run start:prod"
+
+volumes:
+  postgres_data:
+    driver: local
+  postgres_logs:
+    driver: local
+
+networks:
+  home-library-network:
+    driver: bridge
