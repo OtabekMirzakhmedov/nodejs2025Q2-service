@@ -1,176 +1,86 @@
-# Home Library Service
-
-A RESTful API service for managing a personal music library built with NestJS, PostgreSQL, and Docker.
-
-## Architecture
-
-- **NestJS App**: REST API with TypeScript
-- **PostgreSQL**: Database in Docker container
-- **Prisma**: ORM with automatic migrations
-- **Docker**: Multi-container setup with custom networking
-
-## Features
-
-- CRUD operations for Users, Artists, Albums, Tracks
-- Favorites system with relationships
-- Automatic database setup and migrations
-- Container auto-restart and persistent storage
-
-## Prerequisites
-
-- [Docker](https://docs.docker.com/engine/install/) (version 20.0 or higher)
-- [Docker Compose](https://docs.docker.com/compose/install/) (version 2.0 or higher)
+# Home Library Service - Local Testing
 
 ## Quick Start
 
-1. **Clone the repository**
+1. **Clone and install**
    ```bash
    git clone <repository-url>
    cd nodejs2025Q2-service
+   npm install
    ```
 
-2. **Set environment variables** (optional - defaults provided)
+2. **Set up environment**
    ```env
    PORT=4000
-   DB_PASSWORD=Pa$word
+   DB_PASSWORD=Pa$$word
+   DATABASE_URL="postgresql://postgres:Pa$$word@localhost:5432/home_library?schema=public"
+   JWT_SECRET_KEY=your_super_secret_key_here
+   JWT_SECRET_REFRESH_KEY=your_super_secret_refresh_key_here
+   TOKEN_EXPIRE_TIME=1h
+   TOKEN_REFRESH_EXPIRE_TIME=24h
+   CRYPT_SALT=10
+   LOG_LEVEL=debug
+   LOG_MAX_FILE_SIZE=1000k
+   LOG_MAX_FILES=10d
    ```
 
-3. **Run the application**
+3. **Run database migrations**
    ```bash
-   docker-compose up --build
+   npx prisma migrate dev
+   npx prisma generate
    ```
 
-4. **Test the API** (in another terminal window)
+4. **Start the application**
    ```bash
-   # Health check
-   curl http://localhost:4000
-
-   # Create a user
-   curl -X POST http://localhost:4000/user \
-     -H "Content-Type: application/json" \
-     -d '{"login": "testuser", "password": "testpass"}'
-
-   # Get all users
-   curl http://localhost:4000/user
-
-   # Run automated tests
-   docker-compose exec app npm test
+   npm run start:dev
    ```
 
-That's it! Docker automatically handles PostgreSQL setup, database migrations, and networking.
-
-## API Endpoints
-
-- **Users**: `/user` - CRUD operations for users
-- **Artists**: `/artist` - CRUD operations for artists
-- **Albums**: `/album` - CRUD operations for albums
-- **Tracks**: `/track` - CRUD operations for tracks
-- **Favorites**: `/favs` - Add/remove favorites
-
-See `/doc/api.yaml` for complete API documentation.
-
-## Database Schema
-
-The application uses the following entities:
-
-- **Users**: User accounts with login credentials
-- **Artists**: Music artists with Grammy status
-- **Albums**: Music albums linked to artists
-- **Tracks**: Individual songs linked to artists and albums
-- **Favorites**: User favorites for artists, albums, and tracks
-
-## Docker Configuration
-
-### Services
-- **app**: NestJS application container
-- **postgres**: PostgreSQL database container
-
-### Networks
-- **home-library-network**: Custom bridge network for container communication
-
-### Volumes
-- **postgres_data**: Persistent database storage
-- **postgres_logs**: Database logs storage
-
-### Environment Variables
-- `PORT`: Application port (default: 4000)
-- `DB_PASSWORD`: PostgreSQL password
-- `DATABASE_URL`: Complete database connection string
-
-## Docker Commands
+## Testing Authentication
 
 ```bash
-# Start application
-docker-compose up --build
+# 1. Signup
+curl -X POST http://localhost:4000/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"login": "testuser", "password": "testpass"}'
 
-# Stop application  
-docker-compose down
+# 2. Login (get tokens)
+curl -X POST http://localhost:4000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"login": "testuser", "password": "testpass"}'
 
-# View logs
-docker-compose logs
+# 3. Use protected route (use accessToken from login)
+curl -X GET http://localhost:4000/user \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 
-# Run tests
-docker-compose exec app npm test
+# 4. Refresh token
+curl -X POST http://localhost:4000/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refreshToken": "YOUR_REFRESH_TOKEN"}'
 ```
 
-## Testing with Docker
+## Testing Logging
 
-Run tests in the containerized environment:
+- **Check console logs** while making API calls
+- **Check log files** in `logs/` folder:
+   - `logs/application-YYYY-MM-DD.log` - All logs
+   - `logs/error-YYYY-MM-DD.log` - Error logs only
+
+## Run Tests
 
 ```bash
-# Run tests in the app container
-docker-compose exec app npm run test
+# All tests
+npm test
 
-# Run specific test file
-docker-compose exec app npm run test -- test/users.e2e.spec.ts
+# Auth tests  
+npm run test:auth
 
-# Run with authentication tests
-docker-compose exec app npm run test:auth
+# Refresh token tests
+npm run test:refresh
 ```
 
-## Production Deployment
+## Features Implemented
 
-The application is fully containerized and ready for production:
-
-```bash
-# Deploy to production
-docker-compose up -d
-
-# Check container status
-docker-compose ps
-
-# Health check
-curl http://localhost:4000
-```
-
-**No local PostgreSQL installation required** - everything runs in containers!
-
-## Troubleshooting
-
-### Port Already in Use
-```bash
-# Stop existing containers
-docker-compose down
-
-# Check what's using the port
-netstat -tulpn | grep :4000
-
-# Kill the process or change the port in docker-compose.yml
-```
-
-### Database Connection Issues
-```bash
-# Check database container logs
-docker logs home-library-db
-
-# Reset database
-docker-compose down -v
-docker-compose up --build
-```
-
-### Migration Issues
-```bash
-# Reset and rerun migrations
-docker-compose exec app npx prisma migrate reset
-docker-compose exec app npx prisma migrate dev
-```
+- ✅ **Authentication** - JWT with access/refresh tokens
+- ✅ **Database** - PostgreSQL with Prisma ORM
+- ✅ **Logging** - File rotation, multiple levels, error tracking
+- ✅ **CRUD Operations** - Users, Artists, Albums, Tracks, Favorites
