@@ -15,42 +15,45 @@ import { ArtistsService } from './artists.service';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 
-@Controller('artist') // Changed from 'artists' to 'artist'
+@Controller('artist')
 export class ArtistsController {
   constructor(private readonly artistsService: ArtistsService) {}
 
   @Post()
-  create(@Body() createArtistDto: CreateArtistDto) {
-    return this.artistsService.create(createArtistDto);
+  async create(@Body() createArtistDto: CreateArtistDto) {
+    return await this.artistsService.create(createArtistDto);
   }
 
   @Get()
-  findAll() {
-    return this.artistsService.findAll();
+  async findAll() {
+    return await this.artistsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     if (!isUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
-    return this.artistsService.findOne(id);
+    return await this.artistsService.findOne(id);
   }
 
-  @Put(':id') // Changed from @Patch to @Put
-  update(@Param('id') id: string, @Body() updateArtistDto: UpdateArtistDto) {
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateArtistDto: UpdateArtistDto,
+  ) {
     if (!isUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
-    return this.artistsService.update(id, updateArtistDto);
+    return await this.artistsService.update(id, updateArtistDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     if (!isUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
-    return this.artistsService.remove(id);
+    return await this.artistsService.remove(id);
   }
 }

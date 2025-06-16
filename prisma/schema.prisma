@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  login     String   @unique
+  password  String
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Artist {
+  id      String @id @default(uuid())
+  name    String
+  grammy  Boolean
+
+  // Relations
+  albums  Album[]
+  tracks  Track[]
+  favorites FavoriteArtist[]
+
+  @@map("artists")
+}
+
+model Album {
+  id       String  @id @default(uuid())
+  name     String
+  year     Int
+  artistId String? @map("artist_id")
+
+  // Relations
+  artist   Artist? @relation(fields: [artistId], references: [id], onDelete: SetNull)
+  tracks   Track[]
+  favorites FavoriteAlbum[]
+
+  @@map("albums")
+}
+
+model Track {
+  id       String  @id @default(uuid())
+  name     String
+  duration Int
+  artistId String? @map("artist_id")
+  albumId  String? @map("album_id")
+
+  // Relations
+  artist   Artist? @relation(fields: [artistId], references: [id], onDelete: SetNull)
+  album    Album?  @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  favorites FavoriteTrack[]
+
+  @@map("tracks")
+}
+
+// Favorites as separate tables (many-to-many approach)
+// prisma/schema.prisma - update the favorite models
+model FavoriteArtist {
+  id       String @id @default(uuid())
+  artistId String @map("artist_id")
+
+  artist   Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([artistId])
+  @@map("favorite_artists")
+}
+
+model FavoriteAlbum {
+  id      String @id @default(uuid())
+  albumId String @map("album_id")
+
+  album   Album @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@unique([albumId])
+  @@map("favorite_albums")
+}
+
+model FavoriteTrack {
+  id      String @id @default(uuid())
+  trackId String @map("track_id")
+
+  track   Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId])
+  @@map("favorite_tracks")
+}

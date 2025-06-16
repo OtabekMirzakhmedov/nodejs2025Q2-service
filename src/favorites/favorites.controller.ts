@@ -1,4 +1,3 @@
-// src/favorites/favorites.controller.ts
 import {
   Controller,
   Get,
@@ -17,61 +16,61 @@ export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
   @Get()
-  findAll() {
-    return this.favoritesService.findAll();
+  async findAll() {
+    return await this.favoritesService.findAll();
   }
 
   @Post('artist/:id')
   @HttpCode(HttpStatus.CREATED)
-  addArtist(@Param('id') id: string) {
+  async addArtist(@Param('id') id: string) {
     if (!isUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
-    return this.favoritesService.addArtist(id);
+    return await this.favoritesService.addArtist(id);
   }
 
   @Delete('artist/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeArtist(@Param('id') id: string) {
+  async removeArtist(@Param('id') id: string) {
     if (!isUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
-    return this.favoritesService.removeArtist(id);
+    return await this.favoritesService.removeArtist(id);
   }
 
   @Post('album/:id')
   @HttpCode(HttpStatus.CREATED)
-  addAlbum(@Param('id') id: string) {
+  async addAlbum(@Param('id') id: string) {
     if (!isUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
-    return this.favoritesService.addAlbum(id);
+    return await this.favoritesService.addAlbum(id);
   }
 
   @Delete('album/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeAlbum(@Param('id') id: string) {
+  async removeAlbum(@Param('id') id: string) {
     if (!isUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
-    return this.favoritesService.removeAlbum(id);
+    return await this.favoritesService.removeAlbum(id);
   }
 
   @Post('track/:id')
   @HttpCode(HttpStatus.CREATED)
-  addTrack(@Param('id') id: string) {
+  async addTrack(@Param('id') id: string) {
     if (!isUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
-    return this.favoritesService.addTrack(id);
+    return await this.favoritesService.addTrack(id);
   }
 
   @Delete('track/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeTrack(@Param('id') id: string) {
+  async removeTrack(@Param('id') id: string) {
     if (!isUUID(id)) {
       throw new BadRequestException('Invalid UUID format');
     }
-    return this.favoritesService.removeTrack(id);
+    return await this.favoritesService.removeTrack(id);
   }
 }
